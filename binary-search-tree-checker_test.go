@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -24,11 +23,6 @@ func isBST(node *Node) bool {
 
 	return isBST(node.Left) && isBST(node.Right)
 
-}
-
-func main() {
-	result := isBST(nil) // Example usage
-	fmt.Println("empty tree is BST:", result)
 }
 
 func TestEmptyNode_IsBST(t *testing.T) {
@@ -55,5 +49,16 @@ func TestInvalidRightNode_IsBST(t *testing.T) {
 	node := &Node{Value: 10, Right: &Node{Value: 5}}
 	if isBST(node) {
 		t.Error("tree with right child less than parent should not be BST")
+	}
+}
+
+func TestValidBST_IsBST(t *testing.T) {
+	node := &Node{
+		Value: 10,
+		Left:  &Node{Value: 5},
+		Right: &Node{Value: 15, Left: &Node{Value: 12}, Right: &Node{Value: 20}},
+	}
+	if !isBST(node) {
+		t.Error("valid BST should return true")
 	}
 }
