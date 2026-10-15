@@ -43,3 +43,10 @@ func TestSingleNode_IsBST(t *testing.T) {
 		t.Error("single node tree should be BST")
 	}
 }
+
+func TestInvalidLeftNode_IsBST(t * testing.T) {
+	node := &Node{Value: 10, Left: &Node{Value: 15}}
+	if isBST(node) {
+		t.Error("tree with left child greater than parent should not be BST")
+	}	
+}
