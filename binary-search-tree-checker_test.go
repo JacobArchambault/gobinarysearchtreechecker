@@ -62,3 +62,14 @@ func TestValidBST_IsBST(t *testing.T) {
 		t.Error("valid BST should return true")
 	}
 }
+
+func TestInvalidBST_IsBST(t *testing.T) {
+	node := &Node{
+		Value: 10,
+		Left:  &Node{Value: 5, Left: &Node{Value: 3}, Right: &Node{Value: 7}},
+		Right: &Node{Value: 15, Left: &Node{Value: 12}, Right: &Node{Value: 8}},
+	}
+	if isBST(node) {
+		t.Error("invalid BST should return false")
+	}
+}
