@@ -36,3 +36,10 @@ func TestEmptyNode_IsBST(t *testing.T) {
 		t.Error("empty tree should be BST")
 	}
 }
+
+func TestSingleNode_IsBST(t *testing.T) {
+	node := &Node{Value: 10}
+	if !isBST(node) {
+		t.Error("single node tree should be BST")
+	}
+}
