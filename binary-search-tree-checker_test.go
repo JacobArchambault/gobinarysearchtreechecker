@@ -11,7 +11,7 @@ type Node struct {
 }
 
 func isBST(node *Node) bool {
-	if node == nil || (node.Left == nil && node.Right == nil) {
+	if node == nil {
 		return true
 	}
 	if node.Left != nil && node.Value < node.Left.Value {
