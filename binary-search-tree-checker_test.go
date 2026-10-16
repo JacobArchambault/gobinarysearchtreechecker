@@ -11,18 +11,31 @@ type Node struct {
 }
 
 func isBST(node *Node) bool {
+	return isBSTInRange(node, nil, nil)
+}
+
+func isBSTInRange(node *Node, min, max *int) bool {
 	if node == nil {
 		return true
 	}
-	if node.Left != nil && node.Value < node.Left.Value {
+	if min != nil && node.Value < *min {
 		return false
 	}
-	if node.Right != nil && node.Value > node.Right.Value {
+	if max != nil && node.Value > *max {
 		return false
 	}
 
-	return isBST(node.Left) && isBST(node.Right)
+	results := make(chan bool, 2)
+	go func() {
+		results <- isBSTInRange(node.Left, min, &node.Value)
+	}()
+	go func() {
+		results <- isBSTInRange(node.Right, &node.Value, max)
+	}()
 
+	leftOK := <-results
+	rightOK := <-results
+	return leftOK && rightOK
 }
 
 func TestEmptyNode_IsBST(t *testing.T) {
@@ -38,11 +51,11 @@ func TestSingleNode_IsBST(t *testing.T) {
 	}
 }
 
-func TestInvalidLeftNode_IsBST(t * testing.T) {
+func TestInvalidLeftNode_IsBST(t *testing.T) {
 	node := &Node{Value: 10, Left: &Node{Value: 15}}
 	if isBST(node) {
 		t.Error("tree with left child greater than parent should not be BST")
-	}	
+	}
 }
 
 func TestInvalidRightNode_IsBST(t *testing.T) {
@@ -71,5 +84,16 @@ func TestInvalidBST_IsBST(t *testing.T) {
 	}
 	if isBST(node) {
 		t.Error("invalid BST should return false")
+	}
+}
+
+func TestInvalidDescendant_IsBST(t *testing.T) {
+	node := &Node{
+		Value: 10,
+		Left:  &Node{Value: 5, Right: &Node{Value: 12}},
+	}
+
+	if isBST(node) {
+		t.Error("left subtree containing a value greater than the root should not be a BST")
 	}
 }
