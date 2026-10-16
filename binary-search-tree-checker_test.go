@@ -1,6 +1,7 @@
 package main
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -11,10 +12,17 @@ type Node struct {
 }
 
 func isBST(node *Node) bool {
-	return isBSTInRange(node, nil, nil)
+	workers := runtime.GOMAXPROCS(0)
+	if workers < 2 {
+		return isBSTParallel(node, nil, nil, nil)
+	}
+
+	// Slots represent extra goroutines; the caller is the remaining worker.
+	slots := make(chan struct{}, workers-1)
+	return isBSTParallel(node, nil, nil, slots)
 }
 
-func isBSTInRange(node *Node, min, max *int) bool {
+func isBSTParallel(node *Node, min, max *int, slots chan struct{}) bool {
 	if node == nil {
 		return true
 	}
@@ -25,17 +33,35 @@ func isBSTInRange(node *Node, min, max *int) bool {
 		return false
 	}
 
-	results := make(chan bool, 2)
-	go func() {
-		results <- isBSTInRange(node.Left, min, &node.Value)
-	}()
-	go func() {
-		results <- isBSTInRange(node.Right, &node.Value, max)
-	}()
+	left, right := node.Left, node.Right
+	if left == nil {
+		return isBSTParallel(right, &node.Value, max, slots)
+	}
+	if right == nil {
+		return isBSTParallel(left, min, &node.Value, slots)
+	}
 
-	leftOK := <-results
-	rightOK := <-results
-	return leftOK && rightOK
+	if slots == nil {
+		return isBSTParallel(left, min, &node.Value, nil) &&
+			isBSTParallel(right, &node.Value, max, nil)
+	}
+
+	select {
+	case slots <- struct{}{}:
+		leftResult := make(chan bool, 1)
+		go func() {
+			defer func() { <-slots }()
+			leftResult <- isBSTParallel(left, min, &node.Value, slots)
+		}()
+
+		rightOK := isBSTParallel(right, &node.Value, max, slots)
+		leftOK := <-leftResult
+		return leftOK && rightOK
+	default:
+		// No worker slot available: check both sides in this goroutine.
+		return isBSTParallel(left, min, &node.Value, slots) &&
+			isBSTParallel(right, &node.Value, max, slots)
+	}
 }
 
 func TestEmptyNode_IsBST(t *testing.T) {
