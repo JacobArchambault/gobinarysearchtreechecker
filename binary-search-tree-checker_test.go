@@ -26,10 +26,10 @@ func isBSTParallel(node *Node, min, max *int, slots chan struct{}) bool {
 	if node == nil {
 		return true
 	}
-	if min != nil && node.Value < *min {
+	if min != nil && node.Value <= *min {
 		return false
 	}
-	if max != nil && node.Value > *max {
+	if max != nil && node.Value >= *max {
 		return false
 	}
 
@@ -121,5 +121,37 @@ func TestInvalidDescendant_IsBST(t *testing.T) {
 
 	if isBST(node) {
 		t.Error("left subtree containing a value greater than the root should not be a BST")
+	}
+}
+
+func TestDuplicateValue_IsBST(t *testing.T) {
+	tests := []struct {
+		name string
+		node *Node
+	}{
+		{
+			name: "duplicate on left",
+			node: &Node{Value: 10, Left: &Node{Value: 10}},
+		},
+		{
+			name: "duplicate on right",
+			node: &Node{Value: 10, Right: &Node{Value: 10}},
+		},
+		{
+			name: "duplicate ancestor in left subtree",
+			node: &Node{Value: 10, Left: &Node{Value: 5, Right: &Node{Value: 10}}},
+		},
+		{
+			name: "duplicate ancestor in right subtree",
+			node: &Node{Value: 10, Right: &Node{Value: 15, Left: &Node{Value: 10}}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if isBST(test.node) {
+				t.Error("tree with a duplicate value should not be a strict BST")
+			}
+		})
 	}
 }
